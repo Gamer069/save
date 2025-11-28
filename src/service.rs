@@ -1,0 +1,35 @@
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+use crate::{conf::Conf, schedule::OutageGroup};
+
+pub fn service(schedule: &OutageGroup, conf: &Conf) {
+    let overrides = conf.overrides.as_ref();
+    let loop_delay = overrides.and_then(|o| o.loop_delay).unwrap_or(Duration::from_secs(1));
+
+    loop {
+        let time = SystemTime::now();
+
+        for slot in &schedule.today.slots {
+            let start = UNIX_EPOCH + Duration::from_mins(slot.start);
+            let end = UNIX_EPOCH + Duration::from_mins(slot.end);
+
+            let time_before_save = overrides
+                .and_then(|o| o.time_before_save)
+                .unwrap_or(Duration::from_mins(15));
+
+            let time_to_cmp = time + time_before_save;
+
+            if time_to_cmp >= start && time_to_cmp <= end {
+                save(&conf, time_before_save);
+            }
+        }
+
+        std::thread::sleep(loop_delay);
+    }
+}
+
+pub fn save(conf: &Conf, time_before_save: Duration) {
+    for preset in &conf.save.preset {
+        preset.save(time_before_save);
+    }
+}
