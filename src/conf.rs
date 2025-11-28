@@ -56,18 +56,18 @@ impl Preset {
 
         match self {
             Preset::Neovim { path, sockets_glob, outage_message_override, payload_override } => {
-                let runtime_dir = base_dirs.runtime_dir().map(|p| p.to_path_buf()).and_then(|p| Some(p.join("nvim.*.0"))).unwrap_or_else(|| {
-                    eprintln!("Failed to get runtime dir: it does not exist");
-                    std::process::exit(-1);
-                });
-                let runtime_str = runtime_dir.to_str().unwrap_or_else(|| {
-                    eprintln!("Failed to get runtime dir as &str: please ensure it is valid UTF-8");
-                    std::process::exit(-1);
-                });
-
                 let sockets_glob = if cfg!(target_os = "macos") {
                     sockets_glob.clone().unwrap_or("/var/folders/*/*/T/nvim.*/*/nvim.*".to_string())
                 } else {
+                    let runtime_dir = base_dirs.runtime_dir().map(|p| p.to_path_buf()).and_then(|p| Some(p.join("nvim.*.0"))).unwrap_or_else(|| {
+                        eprintln!("Failed to get runtime dir: it does not exist");
+                        std::process::exit(-1);
+                    });
+                    let runtime_str = runtime_dir.to_str().unwrap_or_else(|| {
+                        eprintln!("Failed to get runtime dir as &str: please ensure it is valid UTF-8");
+                        std::process::exit(-1);
+                    });
+
                     sockets_glob.clone().unwrap_or(runtime_str.to_string())
                 };
 
