@@ -71,7 +71,7 @@ impl Preset {
                     sockets_glob.clone().unwrap_or(runtime_str.to_string())
                 };
 
-                let message = outage_message_override.clone().unwrap_or("Power outage in ~{t}".to_string()).replace("{t}", humantime::format_duration(time_before_save).to_string().as_str());
+                let message = outage_message_override.clone().unwrap_or("Planned outage in ~{t}".to_string()).replace("{t}", humantime::format_duration(time_before_save).to_string().as_str());
 
                 let sockets = glob::glob(&sockets_glob);
                 let path = path.clone().unwrap_or(which::which("nvim").unwrap_or_else(|_err| {
