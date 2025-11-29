@@ -3,12 +3,14 @@
 pub mod schedule;
 pub mod conf;
 pub mod service;
+pub mod yasno;
+pub mod util;
+
+use std::collections::HashMap;
 
 use directories::ProjectDirs;
 
-use crate::{conf::Conf, schedule::{OutageGroup, OutageSchedules}};
-
-const OUTAGES_URL: &str = "https://app.yasno.ua/api/blackout-service/public/shutdowns/regions/25/dsos/902/planned-outages";
+use crate::conf::Conf;
 
 fn main() {
     let dirs: ProjectDirs = ProjectDirs::from("me", "illia", "save").unwrap();
@@ -26,68 +28,21 @@ group = "1.1""#).unwrap();
     let parse_err = format!("Failed to parse config, please fix the one at {:?}", conf_path);
     let conf: Conf = toml::from_str(&txt).expect(&parse_err);
 
-    let outages_url = conf
-        .overrides
-        .as_ref()
-        .and_then(|o| o.outages_url.as_deref())
-        .unwrap_or(OUTAGES_URL);
+    let mut providers = HashMap::new();
 
-    let outages_res = reqwest::blocking::get(outages_url);
-    let outages_json = outages_res
-        .unwrap_or_else(|e| {
-            eprintln!("Failed to get outages json: {e}");
-            std::process::exit(-1);
-        })
-        .text()
-        .unwrap_or_else(|e| {
-            eprintln!("Didn't get text response, err: {e}");
-            std::process::exit(-1);
-        });
-    
-    let schedules: OutageSchedules = serde_json::from_str(outages_json.as_str()).expect("Failed to parse outage schedule");
+    providers.insert("yasno", (yasno::planned_outages, yasno::probable_outages));
 
-    let schedule: OutageGroup = match conf.geo.group.as_str() {
-        "1.1" => {
-            schedules.one_one
-        },
-        "1.2" => {
-            schedules.one_two
-        },
-        "2.1" => {
-            schedules.two_one
-        },
-        "2.2" => {
-            schedules.two_two
-        },
-        "3.1" => {
-            schedules.three_one
-        },
-        "3.2" => {
-            schedules.three_two
-        },
-        "4.1" => {
-            schedules.four_one
-        },
-        "4.2" => {
-            schedules.four_two
-        },
-        "5.1" => {
-            schedules.five_one
-        },
-        "5.2" => {
-            schedules.five_two
-        },
-        "6.1" => {
-            schedules.six_one
-        },
-        "6.2" => {
-            schedules.six_two
-        },
-        _ => {
-            eprintln!("Invalid group {}", conf.geo.group.as_str());
-            std::process::exit(-1);
-        }
-    };
+    let provider = providers.get(conf.schedule.provider.as_str()).unwrap_or_else(|| {
+        eprintln!("Failed to get provider: the provider you provided does not exist");
+        std::process::exit(-1);
+    });
 
-    service::service(&schedule, &conf);
+    let planned = provider.0(&conf);
+
+    if conf.schedule.probable {
+        let probable = provider.1(&conf);
+        service::service(&planned, Some(probable), &conf);
+    } else {
+        service::service(&planned, None, &conf);
+    }
 }

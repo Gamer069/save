@@ -9,11 +9,24 @@ pub struct Conf {
     pub geo: GeoConf,
     pub overrides: Option<OverridesConf>,
     pub save: SaveConf,
+    pub schedule: ScheduleConf,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ScheduleConf {
+    pub provider: String,
+    pub probable: bool
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct GeoConf {
-    pub group: String
+    pub group: String,
+
+    // ПРАТ «ДТЕК КИЇВСЬКІ ЕЛЕКТРОМЕРЕЖІ» / ДнЕМ / ЦЕК
+    pub dsos: String,
+
+    // Київ / Дніпро
+    pub region: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -41,7 +54,8 @@ pub enum Script {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct OverridesConf {
-    pub outages_url: Option<String>,
+    pub planned_outages_url: Option<String>,
+    pub probable_outages_url: Option<String>,
 
     #[serde(with = "humantime_serde")]
     pub time_before_save: Option<Duration>,
@@ -71,7 +85,7 @@ impl Preset {
                     sockets_glob.clone().unwrap_or(runtime_str.to_string())
                 };
 
-                let message = outage_message_override.clone().unwrap_or("Planned outage in ~{t}".to_string()).replace("{t}", humantime::format_duration(time_before_save).to_string().as_str());
+                let message = outage_message_override.clone().unwrap_or("Power outage in ~{t}".to_string()).replace("{t}", humantime::format_duration(time_before_save).to_string().as_str());
 
                 let sockets = glob::glob(&sockets_glob);
                 let path = path.clone().unwrap_or(which::which("nvim").unwrap_or_else(|_err| {
