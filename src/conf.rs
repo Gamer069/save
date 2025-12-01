@@ -31,6 +31,9 @@ pub struct GeoConf {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct SaveConf {
+    #[serde(default)]
+    pub test: bool,
+
     pub preset: Vec<Preset>,
 }
 

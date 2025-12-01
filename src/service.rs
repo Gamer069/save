@@ -6,6 +6,16 @@ pub fn service(schedule: &OutageGroup, probable_schedule: Option<ProbableOutageG
     let overrides = conf.overrides.as_ref();
     let loop_delay = overrides.and_then(|o| o.loop_delay).unwrap_or(Duration::from_secs(1));
 
+    let time_before_save = overrides
+        .and_then(|o| o.time_before_save)
+        .unwrap_or(Duration::from_mins(15));
+
+
+    if conf.save.test {
+        save(&conf, time_before_save);
+        std::process::exit(0);
+    }
+
     loop {
         let time = SystemTime::now();
 
@@ -16,10 +26,6 @@ pub fn service(schedule: &OutageGroup, probable_schedule: Option<ProbableOutageG
 
             let start = UNIX_EPOCH + Duration::from_mins(slot.start);
             let end = UNIX_EPOCH + Duration::from_mins(slot.end);
-
-            let time_before_save = overrides
-                .and_then(|o| o.time_before_save)
-                .unwrap_or(Duration::from_mins(15));
 
             let time_to_cmp = time + time_before_save;
 
@@ -37,10 +43,6 @@ pub fn service(schedule: &OutageGroup, probable_schedule: Option<ProbableOutageG
 
                 let start = UNIX_EPOCH + Duration::from_mins(slot.start);
                 let end = UNIX_EPOCH + Duration::from_mins(slot.end);
-
-                let time_before_save = overrides
-                    .and_then(|o| o.time_before_save)
-                    .unwrap_or(Duration::from_mins(15));
 
                 let time_to_cmp = time + time_before_save;
 
