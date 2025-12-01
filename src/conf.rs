@@ -58,10 +58,10 @@ pub struct OverridesConf {
     pub planned_outages_url: Option<String>,
     pub probable_outages_url: Option<String>,
 
-    #[serde(with = "humantime_serde")]
+    #[serde(default, with = "humantime_serde")]
     pub time_before_save: Option<Duration>,
 
-    #[serde(with = "humantime_serde")]
+    #[serde(default, with = "humantime_serde")]
     pub loop_delay: Option<Duration>
 }
 
