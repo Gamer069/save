@@ -1,0 +1,29 @@
+[geo]
+group = "1.1"
+
+# "ПРАТ «ДТЕК КИЇВСЬКІ ЕЛЕКТРОМЕРЕЖІ»" for Kyiv, "ДнЕМ" or "ЦЕК" for Dnipro
+
+dsos = "ПРАТ «ДТЕК КИЇВСЬКІ ЕЛЕКТРОМЕРЕЖІ»"
+
+# Region ("Дніпро" or "Київ")
+region = "Київ"
+
+[schedule]
+
+# Provider (currently yasno is the only supported one)
+provider = "yasno"
+
+# Trigger save when outage is probable?
+probable = true
+
+[save]
+# Save preset
+preset = [
+	# Neovim with default path, default socket glob, no outage message override and no payload override
+	{ Neovim = {} },
+	# Here's what the defaults are:
+	# { Neovim = { Path = "/path/to/neovim", SocketsGlob = "/tmp/nvim.*." } },
+	{ Script = { Text = "dunstify \"POWER OUTAGE IN ~{t}\"" } }
+]
+
+[overrides]

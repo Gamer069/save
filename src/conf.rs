@@ -35,6 +35,7 @@ pub struct SaveConf {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "PascalCase")]
 pub enum Preset {
     // neovim path, glob for sockets, power outage message override, payload override
     Neovim {
